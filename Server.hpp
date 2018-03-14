@@ -1,28 +1,34 @@
-class MarketState {
-	int _availableRawQuantity;
-	int _rawPrice;
-	int _productDemandQuantity;
-	int _productPrice;
+class Market {
+	int rawQuantity;
+	int rawPrice;
+	int productQuantity;
+	int productPrice;
 
 public:
-	MarketState(const int AvailableRawQuantity, const int RawPrice);
+	Market(int raw, int raw_price, int product, int product_price);
 	int getRawPrice();
 	int getProductPrice();
-	int getAvailableRawQuantity();
-	int getProductDemandQuantity();
+	int getRawQuantity();
+	int getProductQuantity();
 };
 
 class Player {
-	char* _name;
-	int _RawQuantity;
-	int _ProductQuantity;
-	int _moneyQuantity;
-	int _plantCount;
-	int _autoPlantCount;
+	char* name;
+	int rawQuantity;
+	int productQuantity;
+	int moneyQuantity;
+	int plantCount;
+	int autoPlantCount;
 
 public:
 	Player(const char* name);
-	Player(const char* name, const int RawQuantity);
+	Player(const char* name, int raw, int product, int money, int plant,
+		int aplant);
+	int getRawQuantity();
+	int getProductQuantity();
+	int getMoneyQuantity();
+	int getPlantCount();
+	int getAutoPlantCount();
 };
 
 class Server{
@@ -31,34 +37,35 @@ class Server{
 	char rcv_str[80];
 	int num_players;
 
-	Player _player;
+	Player player;
 		
-	void SendMsg(const char* buf) const;
-	void RcvStr();
-	void StringAnalyser(const char* str);
+	void sendMsg(const char* buf) const;
+	void rcvMsg();
+	void stringAnalyser(const char* str);
+
 public:	
 	Server(const char* serv_ip, int port);
 	~Server();
 
-	void EnterName(const char* name) const;
-	void CreateGame() const;
-	void JoinByNum(int n) const;
-	void JoinByName(const char* name) const;
-	void QuitGame() const;
-	int  GetPlayersCount() const;
+	void enterName(const char* name) const;
+	void createGame() const;
+	void joinByNum(int n) const;
+	void joinByName(const char* name) const;
+	void quitGame() const;
+	int  getPlayersCount() const;
 
 	Player getPlayer ();
 
-	MarketState GetMarketState ();
+	Market getMarket ();
 	
 	void getPlayersList ();
-	void BuyResource(int num, int price) const;
-	void MakeProduct(int num) const;
-	void SellProduct(int num, int price) const;
+	void buyResource(int num, int price) const;
+	void makeProduct(int num) const;
+	void sellProduct(int num, int price) const;
 
-	void BuildPlant(int count);
-	void BuildAutoPlant(int count);
-	void UpgradePlantToAuto();
+	void buildPlant(int count);
+	void buildAutoPlant(int count);
+	void upgradePlantToAuto();
 
-	void NextTurn() const;
+	void nextTurn() const;
 };
