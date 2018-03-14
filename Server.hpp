@@ -13,7 +13,7 @@ public:
 };
 
 class Player {
-	char* name;
+	const char* name;
 	int rawQuantity;
 	int productQuantity;
 	int moneyQuantity;
@@ -21,8 +21,8 @@ class Player {
 	int autoPlantCount;
 
 public:
-	Player(const char* name);
-	Player(const char* name, int raw, int product, int money, int plant,
+	Player(const char* str);
+	Player(const char* str, int raw, int product, int money, int plant,
 		int aplant);
 	int getRawQuantity();
 	int getProductQuantity();
@@ -38,10 +38,11 @@ class Server{
 	int num_players;
 
 	Player player;
+	Market market;
 		
 	void sendMsg(const char* buf) const;
 	void rcvMsg();
-	void stringAnalyser(const char* str);
+	void analyseString(const char* str);
 
 public:	
 	Server(const char* serv_ip, int port);
@@ -55,7 +56,6 @@ public:
 	int  getPlayersCount() const;
 
 	Player getPlayer ();
-
 	Market getMarket ();
 	
 	void getPlayersList ();
@@ -63,9 +63,9 @@ public:
 	void makeProduct(int num) const;
 	void sellProduct(int num, int price) const;
 
-	void buildPlant(int count);
-	void buildAutoPlant(int count);
-	void upgradePlantToAuto();
+	void buildPlant() const;
+	void buildAutoPlant() const;
+	void upgradePlantToAuto() const;
 
 	void nextTurn() const;
 };

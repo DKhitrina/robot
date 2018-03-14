@@ -103,45 +103,62 @@ struct strlist* divide_str(const char* str)
 		p->data = new_str;
 		p->next = NULL;	
 		if (end){
-			end->next = p;
+			end ->next = p;
 			end = end->next;
 		}else{
-			begin = end = p;
+			head = end = p;
 		}
 	}
 	return head;
 }
 
------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
-Server::Server(const char* serv_ip, int port)
+Market(int raw, int raw_price, int product, int product_price);
 {
-	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (sockfd==-1){
-		throw										/* smth */
-	}
-	struct sockaddr_in addr;
-	addr.sin_family = AF_INET;
-	addr.sin_port = htons(port);
-	if (!inet_aton(serv_ip, &(addr.sin_addr))){
-		throw										/* invalid IP */
-	}
-	if (connect(sockfd, addr, sizeof(addr)!=0){
-		throw										/* failed connection */
-	}
+	rawQuantity = raw;
+	rawPrice = raw_price;
+	productQuantity = product;
+	productPrice = product_price;
 }
+int Market::getRawPrice() {return rawPrice;}
+int Market::getProductPrice() {return productPrice;}
+int Market::getRawQuantity() {return rawQuantity;}
+int Market::getProductQuantity() {return productQuantity;}
 
-Server::~Server(){
-	shutdown(sockfd, 2);
-	close(sockfd);
+-------------------------------------------------------------------------------
+
+Player(const char* str)
+{
+	name = str;
+	rawQuantity = 2;
+	productQuantity = 2; 
+	moneyQuantity = 10000;
+	plantCount = 2;
+	autoPlantCount = 0;
 }
+Player(const char* str, int raw, int product, int money, int plant,
+	int aplant)
+{
+	name = str;
+	rawQuantity = raw;
+	productQuantity = product; 
+	moneyQuantity = money;
+	plantCount = plant;
+	autoPlantCount = aplant;
+}	
+int Player::getRawQuantity() {return rawQuantity;}
+int Player::getProductQuantity() {return productQuantity;}
+int Player::getMoneyQuantity() {return moneyQuantity;}
+int Player::getPlantCount() {return plantCount;}
+int Player::getAutoPlantCount() {return autoPlantCount;}
 
-void Server::SendMsg (const char* str) const
+-------------------------------------------------------------------------------
+void Server::sendMsg (const char* str) const
 {
 	int wr = write(sockfd, str, strlen(str)+1);
 }
-
-void Server::RcvMsg()
+void Server::rcvMsg()
 {
 	int i = 0, j = 0;
 	int rd = read(sockfd, buf, sizeof(buf)-1);
@@ -163,44 +180,13 @@ void Server::RcvMsg()
 	}
 	return rcv_str;
 }
-
-void Server::ListPlayers(struct strlist* list)
-{
-	/* full the struct */
-	struct player* p;
-	p = malloc(sizeof(struct players))
-	list = list->next;
-	player->name = list->data;
-	list = list->next;
-	player->raw = str_to_int(list->data);
-	list = list->next;
-	player->prod = str_to_int(list->data);
-	list = list->next;
-	player->money = str_to_int(list->data);
-	list = list->next;
-	player->plants = str_to_int(list->data);
-	list = list->next;
-	player->auto_plants = str_to_int(list->data);
-	player->next = NULL;
-
-
-	return player;
-}
-
-void Server::StringAnalyser(const char* str)
+void Server::analyseString(const char* str)
 {
 	struct strlist* list = divide_str(str);
 	if(str[0] == '&'){
 		list = list->next;	
 		if cmp_str(list->data, "MARKET"){
-			list = list->next;
-			bank->raw = str_to_int(list->data);
-			list = list->next;
-			bank->min_price = str_to_int(list->data);
-			list = list->next;
-			bank->prod = str_to_int(list->data);
-			list = list->next;
-			bank->max_price = str_to_int(list->data);
+			market = getMarket();
 		}
 		if cmp_str(list->data, "INFO"){
 			ListPlayers(list);
@@ -209,40 +195,65 @@ void Server::StringAnalyser(const char* str)
 	}
 }
 
-void Server::EnterName(const char* name) const
+
+Server::Server(const char* serv_ip, int port)
 {
-	SendMsg(name); SendMsg("\n");
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sockfd==-1){
+		throw										/* smth */
+	}
+	struct sockaddr_in addr;
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(port);
+	if (!inet_aton(serv_ip, &(addr.sin_addr))){
+		throw										/* invalid IP */
+	}
+	if (connect(sockfd, addr, sizeof(addr)!=0){
+		throw										/* failed connection */
+	}
+}
+Server::~Server()
+{
+	shutdown(sockfd, 2);
+	close(sockfd);
 }
 
-int  Server::GetNumPl() const 	{return num_players;}
 
-void Server::CreateGame() const {SendMsg(".create\n");}
-
-void Server::JoinByNum(int n) const
+void Server::enterName(const char* name) const
 {
-	SendMsg(".join "); SendMsg(IntToStr(n)); SendMsg("\n");
+	sendMsg(name); sendMsg("\n");
+}
+void Server::createGame() const {sendMsg(".create\n");}
+void Server::joinByNum(int n) const
+{
+	sendMsg(".join "); sendMsg(int_to_str(n)); sendMsg("\n");
+}
+void Server::joinByName(const char* name) const
+{
+	sendMsg(".join "); sendMsg(name); sendMsg("\n");
+}
+void Server::quitGame() const 	{sendMsg("quit\n");}
+int  Server::getPlayersCount() const 	{return num_players;}
+
+Player Server::getPlayer() {}
+Market Server::getMarket() {}
+
+int Server::getPlayersCount() const {}
+void Server::buyResource(int num, int price) const
+{
+	sendMsg("buy "); sendMsg(int_to_str(num)); sendMsg(int_to_str(price)); sendMsg("\n");
+}
+void Server::makeProduct(int num) const
+{
+	sendMsg("prod "); sendMsg(int_to_str(num)); sendMsg("\n");
+}
+void Server::sellProduct(int num, int price) const
+{
+	sendMsg("sell "); sendMsg(int_to_str(num)); sendMsg(int_to_str(price)); sendMsg("\n");
 }
 
-void Server::JoinByName(const char* name) const
-{
-	SendMsg(".join "); SendMsg(name);
-}
+void Server::buildPlant() const {sendMsg("plant\n");}
+void Server::buildAutoPlant() const {sendMsg("aplant\n");}
+void Server::upgradePlantToAuto() const {sendMsg("upgrade\n");}
 
-void Server::Buy(int num, int price) const
-{
-	SendMsg("buy "); SendMsg(IntToStr(num)); SendMsg(IntToStr(price)); SendMsg("\n");
-}
-
-void Server::Sell(int num, int price) const
-{
-	SendMsg("sell "); SendMsg(IntToStr(num)); SendMsg(IntToStr(price)); SendMsg("\n");
-}
-
-void Server::Prod(int num) const
-{
-	SendMsg("prod "); SendMsg(IntToStr(num)); SendMsg("\n");
-}
-
-void Server::EndTurn() const 	{SendMsg("turn\n");}
-
-void Server::QuitGame() const 	{SendMsg("quit\n");}
+void Server::nextTurn() const {sendMsg("turn\n");}
