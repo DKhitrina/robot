@@ -6,11 +6,24 @@ class Market {
 
 public:
 	Market(int raw, int raw_price, int product, int product_price);
-	int getRawPrice();
-	int getProductPrice();
-	int getRawQuantity();
-	int getProductQuantity();
+	int getRawPrice() const;
+	int getProductPrice() const;
+	int getRawQuantity() const;
+	int getProductQuantity() const;
 };
+
+class Auction {
+	const char* auctionState;
+	const char* winnerName;
+	int winningAmount;
+	int winningPrice;
+public:
+	Auction(const char* state, const char* name, int amount, int price);
+	char* getAuctionState() const;
+	char* getWinnerName() const;
+	int getWinningAmount() const;
+	int getWinningPrice() const;
+}
 
 class Player {
 	const char* name;
@@ -21,14 +34,15 @@ class Player {
 	int autoPlantCount;
 
 public:
-	Player(const char* str);
-	Player(const char* str, int raw, int product, int money, int plant,
+	Player(const char* name);
+	Player(const char* name, int raw, int product, int money, int plant,
 		int aplant);
-	int getRawQuantity();
-	int getProductQuantity();
-	int getMoneyQuantity();
-	int getPlantCount();
-	int getAutoPlantCount();
+	const char* getPlayerName () const;
+	int getRawQuantity() const;
+	int getProductQuantity() const;
+	int getMoneyQuantity() const;
+	int getPlantCount() const;
+	int getAutoPlantCount() const;
 };
 
 class Server{
@@ -39,25 +53,23 @@ class Server{
 
 	Player player;
 	Market market;
-		
+	struct players* list_of_players;
+
 	void sendMsg(const char* buf) const;
 	void rcvMsg();
 	void analyseString(const char* str);
 
-public:	
+public:
 	Server(const char* serv_ip, int port);
 	~Server();
 
 	void enterName(const char* name) const;
 	void createGame() const;
-	void joinByNum(int n) const;
-	void joinByName(const char* name) const;
+	void joinGame(int n) const;
+	void joinGame(const char* name) const;
 	void quitGame() const;
 	int  getPlayersCount() const;
 
-	Player getPlayer ();
-	Market getMarket ();
-	
 	void getPlayersList ();
 	void buyResource(int num, int price) const;
 	void makeProduct(int num) const;

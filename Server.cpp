@@ -1,6 +1,5 @@
 #include <sys/types.h>
 #include <sys/socket.h>
-
 #include <Server.hpp>
 
 char* int_to_str(int num)
@@ -28,7 +27,7 @@ int str_to_int(const char* str)
 	while (ar!=0){
 		num = num*10 + ar[i] - '0';
 		i++;
-	}	
+	}
 	return num;
 }
 
@@ -94,14 +93,14 @@ struct strlist* divide_str(const char* str)
 		while (str[j]!='\n' && str[j]!='\t' && str[j]!=' '){
 			if (i>ar_size)
 				m = double_array(m, &ar_size);
-			m[i]=str[j];	
+			m[i]=str[j];
 			i++;
 			j++;
 		}
 		struct strlist *p;
 		p = malloc (sizeof(struct strlist));
 		p->data = new_str;
-		p->next = NULL;	
+		p->next = NULL;
 		if (end){
 			end ->next = p;
 			end = end->next;
@@ -121,10 +120,24 @@ Market(int raw, int raw_price, int product, int product_price);
 	productQuantity = product;
 	productPrice = product_price;
 }
-int Market::getRawPrice() {return rawPrice;}
-int Market::getProductPrice() {return productPrice;}
-int Market::getRawQuantity() {return rawQuantity;}
-int Market::getProductQuantity() {return productQuantity;}
+int Market::getRawPrice() const {return rawPrice;}
+int Market::getProductPrice() const {return productPrice;}
+int Market::getRawQuantity() const {return rawQuantity;}
+int Market::getProductQuantity() const {return productQuantity;}
+
+-------------------------------------------------------------------------------
+
+Auction(const char* state, const char* name, int amount, int price);
+{
+	auctionState = state;
+	winnerName = name;
+	winningAmount = amount;
+	winningPrice = price;	
+}
+char* Auction::getAuctionState() const {return auctionState;}
+char* Auction::getWinnerName() const {return winnerName;}
+int Auction::getWinningAmount() const {return winningAmount;}
+int Auction::getWinningPrice() const {return winningPrice;}
 
 -------------------------------------------------------------------------------
 
@@ -132,7 +145,7 @@ Player(const char* str)
 {
 	name = str;
 	rawQuantity = 2;
-	productQuantity = 2; 
+	productQuantity = 2;
 	moneyQuantity = 10000;
 	plantCount = 2;
 	autoPlantCount = 0;
@@ -142,18 +155,20 @@ Player(const char* str, int raw, int product, int money, int plant,
 {
 	name = str;
 	rawQuantity = raw;
-	productQuantity = product; 
+	productQuantity = product;
 	moneyQuantity = money;
 	plantCount = plant;
 	autoPlantCount = aplant;
-}	
-int Player::getRawQuantity() {return rawQuantity;}
-int Player::getProductQuantity() {return productQuantity;}
-int Player::getMoneyQuantity() {return moneyQuantity;}
-int Player::getPlantCount() {return plantCount;}
-int Player::getAutoPlantCount() {return autoPlantCount;}
+}
+const char* getPlayerName() const {return name;}
+int Player::getRawQuantity() const {return rawQuantity;}
+int Player::getProductQuantity() const {return productQuantity;}
+int Player::getMoneyQuantity() const {return moneyQuantity;}
+int Player::getPlantCount() const {return plantCount;}
+int Player::getAutoPlantCount() const {return autoPlantCount;}
 
 -------------------------------------------------------------------------------
+
 void Server::sendMsg (const char* str) const
 {
 	int wr = write(sockfd, str, strlen(str)+1);
@@ -182,16 +197,18 @@ void Server::rcvMsg()
 }
 void Server::analyseString(const char* str)
 {
-	struct strlist* list = divide_str(str);
-	if(str[0] == '&'){
-		list = list->next;	
-		if cmp_str(list->data, "MARKET"){
-			market = getMarket();
+/*make double array*/
+	if(ar[0] == '&'){
+		if (cmp_str(ar[1], "MARKET")){
+			Market m(str_to_num(ar[2]), str_to_num(ar[3]),
+				str_to_num(ar[4]), str_to_num(ar[5]));
+			market = m;
 		}
-		if cmp_str(list->data, "INFO"){
-			ListPlayers(list);
+		if (cmp_str(ar[1], "INFO")){
+			Player p(a[2],str_to_num(ar[3]),str_to_num(ar[4]),
+				str_to_num(ar[5]),str_to_num(ar[6]));
+			getPlayerList(p);
 		}
-
 	}
 }
 
@@ -224,21 +241,46 @@ void Server::enterName(const char* name) const
 	sendMsg(name); sendMsg("\n");
 }
 void Server::createGame() const {sendMsg(".create\n");}
-void Server::joinByNum(int n) const
+void Server::joinGame(int n) const
 {
 	sendMsg(".join "); sendMsg(int_to_str(n)); sendMsg("\n");
 }
-void Server::joinByName(const char* name) const
+void Server::joinGame(const char* name) const
 {
 	sendMsg(".join "); sendMsg(name); sendMsg("\n");
 }
 void Server::quitGame() const 	{sendMsg("quit\n");}
 int  Server::getPlayersCount() const 	{return num_players;}
 
-Player Server::getPlayer() {}
-Market Server::getMarket() {}
 
-int Server::getPlayersCount() const {}
+struct players {
+	Player data;
+	struct players* next;
+};
+void Server::getPlayersList(Player p1)
+{
+	char* name1 = p1.getPlayerName();
+	char* name2;
+	struct players* temp = list_of_players;
+	struct palyers* list;
+	while(temp){
+		name2 = (temp->data).getPlayerName;
+		if (cmp_str(name1, name2)){
+			temp->data = p1;
+			return;
+		}
+		temp = temp->next;
+	}
+	list = malloc(sizeof(struct players));
+	list->data = p1;
+	list->next = NULL;
+	temp = list_of_players;
+	if (temp){
+		while (temp->next)
+			temp = temp->next;
+		temp->next = list;
+	}
+}
 void Server::buyResource(int num, int price) const
 {
 	sendMsg("buy "); sendMsg(int_to_str(num)); sendMsg(int_to_str(price)); sendMsg("\n");
@@ -252,8 +294,10 @@ void Server::sellProduct(int num, int price) const
 	sendMsg("sell "); sendMsg(int_to_str(num)); sendMsg(int_to_str(price)); sendMsg("\n");
 }
 
+
 void Server::buildPlant() const {sendMsg("plant\n");}
 void Server::buildAutoPlant() const {sendMsg("aplant\n");}
 void Server::upgradePlantToAuto() const {sendMsg("upgrade\n");}
+
 
 void Server::nextTurn() const {sendMsg("turn\n");}
