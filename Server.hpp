@@ -1,3 +1,5 @@
+#include <Containers.hpp>
+
 class Market {
 	int rawQuantity;
 	int rawPrice;
@@ -10,19 +12,6 @@ public:
 	int getRawQuantity() const;
 	int getProductQuantity() const;
 };
-
-class Auction {
-	const char* auctionState;
-	const char* winnerName;
-	int winningAmount;
-	int winningPrice;
-public:
-	Auction(const char* state, const char* name, int amount, int price);
-	char* getAuctionState() const;
-	char* getWinnerName() const;
-	int getWinningAmount() const;
-	int getWinningPrice() const;
-}
 
 class Server{
 	int sockfd;
