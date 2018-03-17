@@ -1,70 +1,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <Server.hpp>
-
-char* int_to_str(int num)
-{
-	char* ar = NULL;
-	int с = 0, n = num;
-	while (n!=0){
-		n = n/10;
-		c++;
-	}
-	ar = malloc(c+1);
-	ar[c] = 0;
-	n = num;
-	for(i=1; i<=c; i++){
-		ar[c-i]=(n%10) + '0';
-		n=n/10;
-	}
-	return ar;
-}
-
-int str_to_int(const char* str)
-{
-	char* ar = str;
-	int num = 0;
-	while (ar!=0){
-		num = num*10 + ar[i] - '0';
-		i++;
-	}
-	return num;
-}
-
-/* 0 - no match, 1 - match*/
-int cmp_str(const char* ar1, const char* ar2)
-{
-	int i = 0;
-	while (ar1[i]!=0){
-		if (ar1[i]!=ar2[i]){
-			return 0;
-		}
-		i++;
-	}
-	if (ar2[i]!=0){
-		return 0;
-	}
-	return 1;
-}
-
------------------------------------------------------------------------------------------------------------
-
-struct strlist{
-	char* data;
-	struct strlist* next;
-};
-
-void clean_struct (struct item *str)	/* clean list after output */
-{
-	while (str){
-		char *m;
-		struct item *tmp = str;
-		m = str->data;
-		str = str->next;
-		free (tmp);
-		free (m);
-	}
-}
+#include <Containers.hpp>
+#include <Utils.hpp>
 
 char* double_array (char* m, int* ar_form)	/* copy array + double it */
 {
@@ -81,9 +19,7 @@ char* double_array (char* m, int* ar_form)	/* copy array + double it */
 }
 
 struct strlist* divide_str(const char* str)
-{
-	struct strlist* head = NULL;
-	struct strlist* end = NULL;
+{	
 	int i = 0, j = 0;
 	int ar_size = 8;
 	while (str[j]!='\n'){
@@ -97,16 +33,7 @@ struct strlist* divide_str(const char* str)
 			i++;
 			j++;
 		}
-		struct strlist *p;
-		p = malloc (sizeof(struct strlist));
-		p->data = new_str;
-		p->next = NULL;
-		if (end){
-			end ->next = p;
-			end = end->next;
-		}else{
-			head = end = p;
-		}
+
 	}
 	return head;
 }
@@ -197,7 +124,6 @@ void Server::rcvMsg()
 }
 void Server::analyseString(const char* str)
 {
-/*make double array*/
 	if(ar[0] == '&'){
 		if (cmp_str(ar[1], "MARKET")){
 			Market m(str_to_num(ar[2]), str_to_num(ar[3]),
@@ -208,6 +134,11 @@ void Server::analyseString(const char* str)
 			Player p(a[2],str_to_num(ar[3]),str_to_num(ar[4]),
 				str_to_num(ar[5]),str_to_num(ar[6]));
 			getPlayerList(p);
+		}
+		if (cmp_str(ar[1], "ENDTURN")){
+			Market m(str_to_num(ar[2]), str_to_num(ar[3]),
+				str_to_num(ar[4]), str_to_num(ar[5]));
+			market = m;
 		}
 	}
 }
