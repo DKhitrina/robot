@@ -1,75 +1,80 @@
+class Object{
+public:
+    abstract char* toString();
+}
+
+class String(Object) {
+    char* value
+public:
+    String(const char* newValue);
+    ~String();
+    char* toString();
+}
+
+class Player(Object) {
+	const char* name;
+	int rawQuantity;
+	int productQuantity;
+	int moneyQuantity;
+	int plantCount;
+	int autoPlantCount;
+public:
+	Player(const char* name);
+	Player(const char* name, int raw, int product, int money, int plant,
+		int aplant);
+    char* toString()
+	const char* getPlayerName () const;
+	int getRawQuantity() const;
+	int getProductQuantity() const;
+	int getMoneyQuantity() const;
+	int getPlantCount() const;
+	int getAutoPlantCount() const;
+};
+
+class Auction(Object) {
+	const char* auctionState;
+	const char* winnerName;
+	int winningAmount;
+	int winningPrice;
+public:
+	Auction(const char* state, const char* name, int amount, int price);
+	char* toString();
+    char* getAuctionState() const;
+	char* getWinnerName() const;
+	int getWinningAmount() const;
+	int getWinningPrice() const;
+}
+
 struct item{
-    char* data;
+    Object data;
     struct item* next;
 };
 
 class List{
     struct item* head;
     struct item* tail;
-
     struct item* currentItem;
 
 public:
     List();
     ~List();
-    void add(char* str);
+    void add(Object obj);
 
-    char* getCurrent();
-    char* getNext();
-    char* getFirst();
+    Object getCurrent();
+    Object getNext();
+    Object getFirst();
     
     void printList();
     void cleanList();    
 };
 
-struct players{
-    Player data;
-    struct players* next;
-};
-
-class PlayersList{
-    struct players* head;
-    struct players* tail;
-
-    struct players* current;
-
+class UniqueList(List) {
 public:
-    PlayersList();
-    ~PlayersList();
-    void add(Player player);
+    void add(Object obj)
+}
 
-    Player getCurrent();
-    Player getNext();
-    Player getFirst();
-    
-    void printList();
-    void cleanList();    
-};
-
-struct auction_result{
-    Auction data;
-    struct auction_result* next;
-};
-
-class AuctionList{
-    struct auction_result* head;
-    struct auction_result* tail;
-
-    struct auction_result* current;
-
+class AuctionList(List){
 public:
-    AuctionList();
-    ~AuctionList();
-    void add(Auction new_result);
-
-    Auction getCurrent();
-    Auction getNext();
-    Auction getFirst();
-
-    int getMaxPriceBought();
     int getMinPriceBought();
-    int getMaxPriceSold();
-    int getMinPriceSold();
-
-    void cleanList();    
+    int getMaxPriceSold();   
 };

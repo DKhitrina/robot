@@ -13,11 +13,11 @@ List::~List()
     cleanList();
 }
 
-void List::add(char* str)
+void List::add(Object obj)
 {
 	struct item *p;
 	p = malloc (sizeof(struct item));
-    p->data = str;
+    p->data = obj;
 	p->next = NULL;
 	if (tail){
 		tail->next = p;
@@ -50,7 +50,7 @@ void List::printList()
 {
     struct item* tmp = head; 
 	while (tmp){
-		printf("%s\n", tmp->data);
+		printf("%s\n", tmp->data.toString);
 		tmp = tmp->next;
 	}
 }
@@ -60,162 +60,58 @@ void List::cleanList()
     while (head){ 
         tmp = head;
         head = head->next;
-		free (tmp->data);
+		delete (tmp->data);
 		free (tmp);
 	}
 } 
 
--------------------------------------------------------------------------------
-
-PlayersList::PlayersList()
-{
-    head = NULL;
-    tail = NULL;
-    current = NULL;
-}
-PlayersList::~PlayersList()
-{
-    cleanList();
-}
-void PlayersList::add(Player player)
+void UniqueList::add(Object obj)
 {
     struct players* temp = head;
     int new_flag = 1;
     /*wheather the name is already in list*/
     while (temp){
-        if (cmp_str(getCurrent.getPlayerName, player.getPlayerName)){
-            temp->data = player;
+        if (cmp_str(temp->data.toString(), obj.toString())){
+            delete (temp->data);
+            temp->data = obj;
             new_flag = 0;
             break;
         }
         temp = temp->next;
-    }
+    } 
     /*if new name*/
     if (new_flag == 1){
-    	struct players *p;
-    	p = malloc (sizeof(struct players));
-        p->data = player;
-    	p->next = NULL;
-    	if (tail){
-    		tail->next = p;
-    		tail = tail->next;
-    	}else{
-    		head = tail = current = p;
-    	}
+        List::add(obj)
     }
-}
-
-Player PlayersList::getCurrent()
-{
-    return (current);
-}
-Player PlayersList::getNext()
-{
-    current = current->next;
-    return (current);
-}
-Player PlayersList::getFirst()
-{
-    current = head;
-    return (current);
-}
-    
-void PlayersList::printList()
-{
-    struct players* tmp = head;
-    Player p; 
-	while (tmp){
-        p = tmp->data;
-		printf("%s\n", p.getPlayerName);
-		tmp = tmp->next;
-	}
-}
-void PlayersList::cleanList()
-{
-    struct players* tmp;    
-    while (head){ 
-        tmp = head;
-        head = head->next;
-		free (tmp);
-	}
-}   
-
--------------------------------------------------------------------------------
-
-AuctionList::AuctionList()
-{
-    head = NULL;
-    tail = NULL;
-    current = NULL;
-}
-AuctionList::~AuctionList()
-{
-    cleanList();
-}
-void AuctionList::add(Auction new_result)
-{
-	struct auction_result *p;
-	p = malloc (sizeof(struct auction_result));
-    p->data = new_result;
-	p->next = NULL;
-	if (tail){
-		tail->next = p;
-		tail = tail->next;
-	}else{
-		head = tail = current = p;
-	}
-}
-
-Auction AuctionList::getCurrent()
-{
-    return (current->data);
-}
-Auction AuctionList::getNext()
-{
-    current = current->next;
-    return (current->data);
-}
-Auction AuctionList::getFirst()
-{
-    current = head;
-    return (current->data);
 }
 
 int AuctionList::getMinPriceBought()
 {
-    struct auction_result temp = head;
     Auction au;
     int min = 10000;
     int price;
-    while (head){
-        au = temp.getCurrent;
-        price = au.getWinningPrice;
-        if(cmp_str(au.getAuctionState,"BOUGHT") && price < min)
+
+    au = (Auction)getFirst()
+
+    while (au){
+        price = au.getWinningPrice();
+        if(cmp_str(au.getAuctionState(),"BOUGHT") && price < min)
             min = price;
+        au = (Auction)getNext();
     }
     return min;
 }
-int AuctionList::getMaxPriceSold();
+int AuctionList::getMaxPriceSold()
 {
-    struct auction_result temp = head;
     Auction au;
+    au = (Auction)getFirst();
     int max = 0;
     int price;
-    while (head){
-        au = temp.getCurrent;
-        price = au.getWinningPrice;
-        if(cmp_str(au.getAuctionState,"SOLD") && price > max)
+    while (au){
+        price = au.getWinningPrice();
+        if(cmp_str(au.getAuctionState(),"SOLD") && price > max)
             max = price;
+        au = (Auction)getNext();    
     }
     return max;
-}
-
-void AuctionList::cleanList()
-{
-    struct auction_result* tmp;    
-    while (head){ 
-        tmp = head;
-        head = head->next;
-		free (tmp);
-	}    
 }
