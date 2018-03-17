@@ -3,7 +3,6 @@ class Market {
 	int rawPrice;
 	int productQuantity;
 	int productPrice;
-
 public:
 	Market(int raw, int raw_price, int product, int product_price);
 	int getRawPrice() const;
@@ -32,7 +31,6 @@ class Player {
 	int moneyQuantity;
 	int plantCount;
 	int autoPlantCount;
-
 public:
 	Player(const char* name);
 	Player(const char* name, int raw, int product, int money, int plant,
@@ -53,7 +51,8 @@ class Server{
 
 	Player player;
 	Market market;
-	struct players* list_of_players;
+	PlayersList players_list;
+	AuctionList auction_list;
 
 	void sendMsg(const char* buf) const;
 	void rcvMsg();
@@ -70,7 +69,9 @@ public:
 	void quitGame() const;
 	int  getPlayersCount() const;
 
-	void getPlayersList ();
+	void getMarket() const;
+	void getPlayersInfo() const;
+
 	void buyResource(int num, int price) const;
 	void makeProduct(int num) const;
 	void sellProduct(int num, int price) const;
