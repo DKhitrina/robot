@@ -1,6 +1,65 @@
 #include <Containers.hpp>
 #include <Utils.hpp>
 
+String::String(const char* newstr) {
+    int len = strlen(newstr)+1;
+    value = malloc(len);
+    for(int i=0; i<len; i++) {
+        value[i] = newstr[i]
+    } 
+    value[i] = 0;
+}
+String::~String() 
+    {free (value);
+}
+char* String::toString const {return value;}
+
+-------------------------------------------------------------------------------
+
+Player::Player(const char* str)
+{
+	name = str;
+	rawQuantity = 2;
+	productQuantity = 2;
+	moneyQuantity = 10000;
+	plantCount = 2;
+	autoPlantCount = 0;
+}
+Player::Player(const char* str, int raw, int product, int money, int plant,
+	int aplant)
+{
+	name = str;
+	rawQuantity = raw;
+	productQuantity = product;
+	moneyQuantity = money;
+	plantCount = plant;
+	autoPlantCount = aplant;
+}
+Player::toString() const {return name;}
+const char* Player::getPlayerName() const {return name;}
+int Player::getRawQuantity() const {return rawQuantity;}
+int Player::getProductQuantity() const {return productQuantity;}
+int Player::getMoneyQuantity() const {return moneyQuantity;}
+int Player::getPlantCount() const {return plantCount;}
+int Player::getAutoPlantCount() const {return autoPlantCount;}
+
+-------------------------------------------------------------------------------
+
+Auction::Auction(const char* state, const char* name, int amount, int price);
+{
+	auctionState = state;
+	winnerName = name;
+	winningAmount = amount;
+	winningPrice = price;	
+}
+char* Auction::toString() const {return name;}
+char* Auction::getAuctionState() const {return auctionState;}
+char* Auction::getWinnerName() const {return winnerName;}
+int Auction::getWinningAmount() const {return winningAmount;}
+int Auction::getWinningPrice() const {return winningPrice;}
+
+-------------------------------------------------------------------------------
+
 List::List()
 {
     head = NULL;
@@ -27,12 +86,11 @@ void List::add(Object obj)
 	}
 }
 
-char* List::getCurrent()
+Object List::getCurrent() const
 {
     return (currentItem->data);    
 }
-
-char* List::getNext()
+Object List::getNext()
 {
     if (currentItem->next){
         currentItem = currentItem->next;
@@ -40,17 +98,17 @@ char* List::getNext()
     }
     return (NULL);
 }
-char* List::getFirst()
+Object List::getFirst()
 {
     currentItem = head;
     return (currentItem->data);
 }
    
-void List::printList()
+void List::printList() const
 {
     struct item* tmp = head; 
 	while (tmp){
-		printf("%s\n", tmp->data.toString);
+		printf("%s\n", (tmp->data).toString);
 		tmp = tmp->next;
 	}
 }
@@ -60,7 +118,7 @@ void List::cleanList()
     while (head){ 
         tmp = head;
         head = head->next;
-		delete (tmp->data);
+		delete tmp->data;
 		free (tmp);
 	}
 } 
@@ -85,7 +143,7 @@ void UniqueList::add(Object obj)
     }
 }
 
-int AuctionList::getMinPriceBought()
+int AuctionList::getMinPriceBought() const
 {
     Auction au;
     int min = 10000;
@@ -101,7 +159,7 @@ int AuctionList::getMinPriceBought()
     }
     return min;
 }
-int AuctionList::getMaxPriceSold()
+int AuctionList::getMaxPriceSold() const
 {
     Auction au;
     au = (Auction)getFirst();

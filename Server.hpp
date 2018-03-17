@@ -15,21 +15,21 @@ public:
 
 class Server{
 	int sockfd;
-	char buf[80];
-	char rcv_str[80];
+	char buf[128];
 	int num_players;
 
 	Player player;
 	Market market;
-	PlayersList players_list;
+	UniqueList players_list;
 	AuctionList auction_list;
 
+	void connect(const char* serv_ip, int port); 
 	void sendMsg(const char* buf) const;
 	void rcvMsg();
 	void analyseString(const char* str);
 
 public:
-	Server(const char* serv_ip, int port);
+	Server(const char* name,const char* serv_ip, int port);
 	~Server();
 
 	void enterName(const char* name) const;

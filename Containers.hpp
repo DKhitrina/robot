@@ -8,7 +8,7 @@ class String(Object) {
 public:
     String(const char* newValue);
     ~String();
-    char* toString();
+    char* toString() const;
 }
 
 class Player(Object) {
@@ -22,7 +22,7 @@ public:
 	Player(const char* name);
 	Player(const char* name, int raw, int product, int money, int plant,
 		int aplant);
-    char* toString()
+    char* toString() const;
 	const char* getPlayerName () const;
 	int getRawQuantity() const;
 	int getProductQuantity() const;
@@ -38,7 +38,7 @@ class Auction(Object) {
 	int winningPrice;
 public:
 	Auction(const char* state, const char* name, int amount, int price);
-	char* toString();
+	char* toString() const;
     char* getAuctionState() const;
 	char* getWinnerName() const;
 	int getWinningAmount() const;
@@ -60,21 +60,21 @@ public:
     ~List();
     void add(Object obj);
 
-    Object getCurrent();
+    Object getCurrent() const;
     Object getNext();
     Object getFirst();
     
-    void printList();
+    void printList() const;
     void cleanList();    
 };
 
 class UniqueList(List) {
 public:
-    void add(Object obj)
+    void add(Object obj);
 }
 
 class AuctionList(List){
 public:
-    int getMinPriceBought();
-    int getMaxPriceSold();   
+    int getMinPriceBought() const;
+    int getMaxPriceSold() const;   
 };

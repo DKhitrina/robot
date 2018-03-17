@@ -44,3 +44,26 @@ int cmp_str(const char* ar1, const char* ar2)
 	}
 	return 1;
 }
+
+int check_if_num (char* ar)
+{						/*0 - no match, 1 - match*/
+	int i = 0;
+	while (ar[i]!=0){
+		if (ar[i]<'0' || ar[i]>'9')
+			return 0;
+		i++;
+	}
+	return 1;
+}
+
+int check_if_string (char* ar)
+{						/*0 - no match, 1 - match*/
+	int i = 0;
+	while (ar[i]!=0){
+		if (ar[i]<'A' || (ar[i]>'Z' && ar[i]<'a')
+		|| ar[i]>'z')
+			return 0;
+		i++;
+	}
+	return 1;
+}

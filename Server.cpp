@@ -20,7 +20,7 @@ char* double_array (char* m, int* ar_form)	/* copy array + double it */
 
 List divide_str(const char* str)
 {	
-	List list;
+	List list = new List();
 	int i = 0, j = 0;
 	int ar_size = 8;
 	while (str[j]!='\n'){
@@ -56,106 +56,7 @@ int Market::getProductQuantity() const {return productQuantity;}
 
 -------------------------------------------------------------------------------
 
-Auction::Auction(const char* state, const char* name, int amount, int price);
-{
-	auctionState = state;
-	winnerName = name;
-	winningAmount = amount;
-	winningPrice = price;	
-}
-char* Auction::getAuctionState() const {return auctionState;}
-char* Auction::getWinnerName() const {return winnerName;}
-int Auction::getWinningAmount() const {return winningAmount;}
-int Auction::getWinningPrice() const {return winningPrice;}
-
--------------------------------------------------------------------------------
-
-Player::Player(const char* str)
-{
-	name = str;
-	rawQuantity = 2;
-	productQuantity = 2;
-	moneyQuantity = 10000;
-	plantCount = 2;
-	autoPlantCount = 0;
-}
-Player::Player(const char* str, int raw, int product, int money, int plant,
-	int aplant)
-{
-	name = str;
-	rawQuantity = raw;
-	productQuantity = product;
-	moneyQuantity = money;
-	plantCount = plant;
-	autoPlantCount = aplant;
-}
-const char* Player::getPlayerName() const {return name;}
-int Player::getRawQuantity() const {return rawQuantity;}
-int Player::getProductQuantity() const {return productQuantity;}
-int Player::getMoneyQuantity() const {return moneyQuantity;}
-int Player::getPlantCount() const {return plantCount;}
-int Player::getAutoPlantCount() const {return autoPlantCount;}
-
--------------------------------------------------------------------------------
-
-void Server::sendMsg (const char* str) const
-{
-	int wr = write(sockfd, str, strlen(str)+1);
-}
-void Server::rcvMsg()
-{
-	int i = 0, j = 0;
-	int rd = read(sockfd, buf, sizeof(buf)-1);
-	if (rd == -1)
-		throw										/* error read from socket */
-	buf[rd] = 0;
-	/* divide string */
-	while(buf!='\n'){
-		rcv_str[i] = buf[i];
-		i++;
-	}
-	rcv_str[i] = '\n';
-	i++;
-	/* bufer "shift" */
-	while(i <= rd){
-		buf[j] = buf[i];
-		i++;
-		j++;
-	}
-	analyseString(rcv_str);
-}
-void Server::analyseString(const char* str)
-{
-	List l = divide_str (str);
-	if(l.getFirst == '&'){
-		if (cmp_str(l.getNext, "MARKET")){
-			Market m (str_to_int(l.getNext), str_to_int(l.getNext),
-				str_to_int(l.getNext),str_to_int(l.getNext));
-			market = m;
-		}
-		if (cmp_str(l.getNext, "INFO")){
-			Player p (l.getNext, str_to_int(l.getNext),str_to_int(l.getNext),
-				str_to_int(l.getNext),str_to_int(l.getNext));
-			players_list.add(p);
-		}
-		if (cmp_str(l.getNext, "PLAYERS")){
-			num_players = str_to_int(l.getNext);
-		}	
-		if (cmp_str(l.getNext, "BOUGHT") || cmp_str(l.getNext, "PLAYERS"){
-			Auction a (l.getNext, l.getNext, str_to_int(l.getNext),
-				str_to_int(l.getNext));
-			auction_list.add(a);			
-		}			
-		if (cmp_str(ar[1], "ENDTURN")){
-			getMarket();
-			getPlayersInfo();	
-		}
-	}
-	l.cleanList;
-}
-
-
-Server::Server(const char* serv_ip, int port)
+void Socket::connect (const char* serv_ip, int port)
 {
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd==-1){
@@ -171,12 +72,118 @@ Server::Server(const char* serv_ip, int port)
 		throw										/* failed connection */
 	}
 }
+
+void Server::sendMsg (const char* str) const
+{
+	int wr = write(sockfd, str, strlen(str)+1);
+}
+void Server::rcvMsg()
+{
+	char buf[128];
+	char rcv_str[81];
+	int i, j;	
+
+	List list = new List();
+
+	for(;;){
+		int rd = read(sockfd, buf, sizeof(buf)-1);
+		if (rd == -1){
+			printf("Socket Error: Unable to Read Message\n");
+			exit(1);
+		}	
+		buf[rd] = 0;
+
+		/* divide string */
+		j = 0;
+
+		while(j<=rd){
+			i = 0;
+			while(buf[j]!='\n'){
+				rcv_str[i] = buf[j];
+				i++;
+				j++;
+			}
+			rcv_str[i] = 0;
+			j++;
+			String str = new String(rcv_str);
+			list.add (str);
+		}
+
+		if (rd < sizeof(buf)-1)
+			break;
+
+	}
+
+	list.printList();
+
+	Object o = list.getFirst();
+	while (o){
+		analyseString(o.toString());
+		o = list.getNext();
+	}
+	
+	delete list;
+}
+
+void Server::analyseString(const char* str)
+{
+	List l = divide_str (str);
+	if(l.getFirst() == '&'){
+		char* command = l.getNext().toString();
+		if (cmp_str(command, "MARKET")){
+			Market m = new Market(str_to_int(l.getNext().toString()),
+				str_to_int(l.getNext().toString()),
+				str_to_int(l.getNext().toString()),
+				str_to_int(l.getNext().toString()));
+
+			if (market)
+				delete market;
+			market = m;
+		}
+		if (cmp_str(command, "INFO")){
+			Player p = new Player(l.getNext().toString(),
+				str_to_int(l.getNext().toString()),
+				str_to_int(l.getNext().toString()),
+				str_to_int(l.getNext().toString()),
+				str_to_int(l.getNext()).toString());
+			players_list.add(p);
+		}
+		if (cmp_str(command, "PLAYERS")){
+			num_players = str_to_int(l.getNext().toString());
+		}	
+		if (cmp_str(command, "BOUGHT") || cmp_str(command, "SOLD"){
+			Auction a = new Auction(l.getNext().toString(),
+				l.getNext().toString(),
+				str_to_int(l.getNext().toString()),
+				str_to_int(l.getNext().toString()));
+			auction_list.add(a);			
+		}			
+		if (cmp_str(command, "ENDTURN")){
+			getMarket();
+			getPlayersInfo();	
+		}
+	}
+	delete (l);
+}
+
+
+Server::Server(const char* name, const char* serv_ip, int port)
+{
+	connect(serv_ip, port);
+	players_list = new UniqueList();
+	auction_list = new AuctionList();
+	player = new Player(name, 2, 2, 10000, 2, 0);
+	market = new Market(0, 0, 0, 0);
+}
 Server::~Server()
 {
 	shutdown(sockfd, 2);
 	close(sockfd);
+	delete players_list;
+	delete auction_list;
+	delete player;
+	delete market;
 }
-
 
 void Server::enterName(const char* name) const
 {
@@ -220,5 +227,5 @@ void Server::nextTurn() const
 {
 	sendMsg("turn\n");
 	/*renew information*/
-	auction_list.cleanList;				/*is that enough?*/
+	auction_list.cleanList;
 }
