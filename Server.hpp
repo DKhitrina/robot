@@ -24,25 +24,6 @@ public:
 	int getWinningPrice() const;
 }
 
-class Player {
-	const char* name;
-	int rawQuantity;
-	int productQuantity;
-	int moneyQuantity;
-	int plantCount;
-	int autoPlantCount;
-public:
-	Player(const char* name);
-	Player(const char* name, int raw, int product, int money, int plant,
-		int aplant);
-	const char* getPlayerName () const;
-	int getRawQuantity() const;
-	int getProductQuantity() const;
-	int getMoneyQuantity() const;
-	int getPlantCount() const;
-	int getAutoPlantCount() const;
-};
-
 class Server{
 	int sockfd;
 	char buf[80];

@@ -151,7 +151,7 @@ void Server::analyseString(const char* str)
 			getPlayersInfo();	
 		}
 	}
-	l.~List(); 								/*how to delete List*/
+	l.cleanList;
 }
 
 
