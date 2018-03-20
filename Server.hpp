@@ -15,7 +15,6 @@ public:
 
 class Server{
 	int sockfd;
-	char buf[128];
 	int num_players;
 
 	Player player;
