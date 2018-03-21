@@ -7,12 +7,13 @@ class StateMachine{
     enum states {
         s_null, s_error, s_separate, s_number, s_indeficator, s_key_word,
         s_assignment, s_string
-    } state;
+    } state, lexeme_type;
 
 public:
     StateMachine();
     ~StateMachine();
     int getState();
+    int getLexemeType();
     char* step(int symbol);
 
 private:
@@ -32,7 +33,7 @@ private:
 
 enum lexemes { number, cchar, variable, mark, function, key_word,
     separator, error};
-static char* enumStr[] = { "number", "const char", "variable", "mark",
+const char* enumStr[] = { "number", "const char", "variable", "mark",
     "function", "key_word", "separator"};
     
 struct lex{

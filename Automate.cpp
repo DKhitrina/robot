@@ -32,6 +32,7 @@ StateMachine::StateMachine()
 StateMachine::~StateMachine()   { delete [] buf; delete buf; }
 
 int StateMachine::getState()    { return state; }
+int StateMachine::getLexemeType()    { return lexeme_type; }
 
 char* StateMachine::step(int symb)
 {
@@ -110,9 +111,9 @@ char* StateMachine::makeLexeme()
 
 
 
-void StateMachine::stateError()
+void StateMachine::stateError() /* throw? */
 {
-    throw "lexeme error";
+    printf ("Error: lexeme expected\n");
 }
 void StateMachine::stateNull(int symb)
 {
@@ -140,6 +141,7 @@ void StateMachine::stateNull(int symb)
     else if (symb == '"')
     {
         state = s_string;
+        addSymbol(symb);
     }
     else if (check_separating_character(symb))
     {
@@ -154,11 +156,15 @@ void StateMachine::stateSeparate(int symb)
     if (check_space(symb))
         state = s_null;
     addSymbol(symb);
+    lexeme_type = s_separate;
 }
 void StateMachine::stateNumber(int symb)
 {
     if (check_space(symb))
+    { 
+        lexeme_type = s_number;
         state = s_null;
+    }
     else if (check_separating_character(symb))
         state = s_separate;    
     else
@@ -172,7 +178,10 @@ void StateMachine::stateNumber(int symb)
 void StateMachine::stateIdentificator(int symb)
 {
     if (check_space(symb))
-        state = s_null;
+    {
+        lexeme_type = s_indeficator; 
+        state = s_null;   
+    }
     else if (check_separating_character(symb))
         state = s_separate;  
     else
@@ -187,7 +196,10 @@ void StateMachine::stateIdentificator(int symb)
 void StateMachine::stateKeyWord(int symb)
 {
     if (check_space(symb))
+    {
         state = s_null;
+        lexeme_type = s_key_word;
+    }
     else if (check_separating_character(symb))
         state = s_separate;  
     else
@@ -202,8 +214,9 @@ void StateMachine::stateAssignment(int symb)
 {
     if (symb == '=')
     {
-        state = s_null;
         addSymbol(symb);
+        lexeme_type = s_assignment;
+        state = s_null;
     }
     else
         state = s_error;
@@ -211,7 +224,11 @@ void StateMachine::stateAssignment(int symb)
 void StateMachine::stateString(int symb)
 {
     if (symb == '"')
+    {
+        addSymbol(symb);
+        lexeme_type = s_string;        
         state = s_null;
+    }
     else
         addSymbol(symb);
 }
