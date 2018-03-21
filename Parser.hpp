@@ -30,8 +30,11 @@ private:
     void stateString(int symbol); 
 };
 
-enum lexemes { number, cchar, variable, mark, function, key_word, separator};
-
+enum lexemes { number, cchar, variable, mark, function, key_word,
+    separator, error};
+static char* enumStr[] = { "number", "const char", "variable", "mark",
+    "function", "key_word", "separator"};
+    
 struct lex{
     const char* data;
     int string_num;
@@ -51,6 +54,7 @@ public:
 
     const char* getCurrent();
     const char* getNext();
+    const char* getFirst();
 
     void printList();    
 }

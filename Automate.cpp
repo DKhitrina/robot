@@ -237,6 +237,22 @@ LexemeList::~LexemeList ()  { delete l; }
 	}
 }
 
+void LexemeList::addLexeme (const char* str, int num, lexemes type)
+{
+    struct lex* l = new struct lex;
+    l->data = str;
+    l->string_num = n;
+    l->type = t;
+    next = NULL;
+    if (tail)
+    {
+		tail->next = p;
+		tail = tail->next;
+	}
+    else
+		head = tail = current = p;
+}
+
 const char* LexemeList::getCurrent()
 {
     return (current->data);    
@@ -259,22 +275,9 @@ void LexemeList::printList()
     struct lex* tmp = head; 
 	while (tmp)
     {
-		printf("%s\n", tmp->data);
+		printf("%d: %s, %s\n", tmp->string_num, tmp->data,
+            enumStr[tmp->type]);
 		tmp = tmp->next;
 	}
 }
-void LexemeList::addLexeme (const char* str, int num, lexemes type)
-{
-    struct lex* l = new struct lex;
-    l->data = str;
-    l->string_num = n;
-    l->type = t;
-    next = NULL;
-    if (tail)
-    {
-		tail->next = p;
-		tail = tail->next;
-	}
-    else
-		head = tail = current = p;
-}
+

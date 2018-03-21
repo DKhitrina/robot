@@ -1,0 +1,6 @@
+@begin:
+    print "mounth no. " ?turn;
+    buy 2 ?raw_price;
+    sell ?production(?my_id) ?production_price;
+    prod 2;
+@end
