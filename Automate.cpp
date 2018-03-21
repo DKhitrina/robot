@@ -1,21 +1,22 @@
-#include <Parser.hpp>
+#include "Automate.hpp"
 #include <stdlib.h>
+#include <stdio.h>
 
 int check_separating_character (int symb) /* 1 - match, 0 - don't match */
-{ 
-    if ( symb == '+' || symb == '-' || symb == '*' || symb == '/' 
+{
+    if ( symb == '+' || symb == '-' || symb == '*' || symb == '/'
         || symb == '%' || symb == '<' || symb == '>' || symb == '='
         || symb == '&' || symb == '|' || symb == '!' || symb == '('
         || symb == ')' || symb == '[' || symb == ']' || symb == ';'
         || symb == ',')
         return 1;
-    else    
+    else
         return 0;
 }
 
 int check_space (int symb)
 {
-    if (symb == ' ' || symb == '\t' || symb == '\n')
+    if (symb == '\n' || symb == ' ' || symb == '\t')
         return 1;
     else
         return 0;
@@ -28,14 +29,44 @@ StateMachine::StateMachine()
     buf = new char[128];
     s_buf = new char;
     state = s_null;
+    lexeme_type = s_null;
 }
 StateMachine::~StateMachine()   { delete [] buf; delete buf; }
 
 int StateMachine::getState()    { return state; }
-int StateMachine::getLexemeType()    { return lexeme_type; }
+lexemes StateMachine::getLexemeType(char* str)
+{
+    switch (lexeme_type)
+    {
+    case s_null:
+        break;
+    case s_error:
+        return error;
+    case s_separate:
+        return separator;
+    case s_number:
+        return number;
+    case s_indeficator:
+        if (str[0] == '$')
+            return variable;
+        if (str[0] == '@')
+            return mark;
+        if (str[0] == '?')
+            return function;
+    case s_key_word:
+        return key_word;
+    case s_assignment:
+        return assignment;
+    case s_string:
+        return cchar;
+    }
+    return error;
+}
 
 char* StateMachine::step(int symb)
 {
+    printf ("state machine: %d\n", getState());
+    printf ("new symbol: %d\n", symb);
     switch (state)
     {
     case s_null:
@@ -63,11 +94,11 @@ char* StateMachine::step(int symb)
         stateString(symb);
         break;
 
-    }    
+    }
     if (state == s_null || state == s_separate)
         return makeLexeme();
     else
-        return NULL;    
+        return NULL;
 }
 
 
@@ -78,35 +109,51 @@ void StateMachine::getSymbol (int symb)  /* using special buf for ungets */
     if (s_buf){
         for (i = 0; buf[i] != 0; i++)
         {}
-        buf[i - 1] = s_buf[0];
-        buf[i] = 0;
-    }    
+        buf[i] = s_buf[0];
+        buf[i+1] = 0;
+    }
         s_buf[0] = symb;
+printf ("BUFFER: %s\n", buf);
 }
 void StateMachine::addSymbol (int symb)  /* without ungets */
 {
     int i;
     for (i = 0; buf[i] != 0; i++)
     {}
-    buf[i - 1] = symb;
-    buf[i] = 0;
+    buf[i] = symb;
+    buf[i+1] = 0;
+printf ("BUFFER: %s\n", buf);
 }
 char* StateMachine::makeLexeme()
 {
+printf ("\nMake lexeme\n");
     char* lex;
     int i;
-    if (buf){
+    if (s_buf)
+    {
         for (i = 0; buf[i] != 0; i++)
         {}
-        lex = new char[i];
+        buf[i] = s_buf[0];
+        buf[i+1] = 0;
+	s_buf[0] = 0;
+    }
+printf ("LEXEME: %s\n\n", buf);
+    if (buf[0]!=0)
+    {
+        for (i = 0; buf[i] != 0; i++)
+        {}
+        lex = new char[i+1];
         for (i = 0; buf[i] != 0; i++){
             lex[i] = buf[i];
         }
-        lex[i] = 0;
-        buf[0] = 0; /* clean buf */
+        lex[i+1] = 0;
+        for (i = 0; buf[i] != 0; i++)
+        {
+            buf[i] = 0;
+        }
         return lex;
-    }
-    return NULL;
+    }else
+        return NULL;
 }
 
 
@@ -117,7 +164,7 @@ void StateMachine::stateError() /* throw? */
 }
 void StateMachine::stateNull(int symb)
 {
-    if (symb >= '0' || symb <= '9')
+    if (symb >= '0' && symb <= '9')
     {
         state = s_number;
         getSymbol(symb);
@@ -126,11 +173,11 @@ void StateMachine::stateNull(int symb)
     {
         state = s_indeficator;
         getSymbol(symb);
-    }        
+    }
     else if ((symb >= 'A' && symb <= 'Z')
         || (symb >= 'a' && symb <= 'z'))
     {
-        state = s_key_word;   
+        state = s_key_word;
         getSymbol(symb);
     }
     else if (symb == ':')
@@ -150,23 +197,24 @@ void StateMachine::stateNull(int symb)
     }
     else if (!check_space(symb))
         state = s_error;
-} 
+}
 void StateMachine::stateSeparate(int symb)
 {
     if (check_space(symb))
         state = s_null;
-    addSymbol(symb);
+    else
+        addSymbol(symb);
     lexeme_type = s_separate;
 }
 void StateMachine::stateNumber(int symb)
 {
     if (check_space(symb))
-    { 
+    {
         lexeme_type = s_number;
         state = s_null;
     }
     else if (check_separating_character(symb))
-        state = s_separate;    
+        state = s_separate;
     else
     {
         if (symb < '0' || symb > '9')
@@ -179,11 +227,14 @@ void StateMachine::stateIdentificator(int symb)
 {
     if (check_space(symb))
     {
-        lexeme_type = s_indeficator; 
-        state = s_null;   
+        lexeme_type = s_indeficator;
+        state = s_null;
     }
     else if (check_separating_character(symb))
-        state = s_separate;  
+    {
+        lexeme_type = s_indeficator;
+        state = s_separate;
+    }
     else
     {
         if (symb < '0' || (symb > '9' && symb < 'A')
@@ -201,7 +252,10 @@ void StateMachine::stateKeyWord(int symb)
         lexeme_type = s_key_word;
     }
     else if (check_separating_character(symb))
-        state = s_separate;  
+    {
+        state = s_separate;
+        lexeme_type = s_key_word;
+    }
     else
     {
         if (symb < 'A' || (symb > 'Z' && symb < 'a') || symb > 'z')
@@ -226,7 +280,7 @@ void StateMachine::stateString(int symb)
     if (symb == '"')
     {
         addSymbol(symb);
-        lexeme_type = s_string;        
+        lexeme_type = s_string;
         state = s_null;
     }
     else
@@ -242,37 +296,37 @@ LexemeList::LexemeList ()
     tail = NULL;
 }
 
-LexemeList::~LexemeList ()  { delete l; }
+LexemeList::~LexemeList ()
 {
-    struct lex* tmp;    
+    struct lex* tmp;
     while (head)
-    { 
+    {
         tmp = head;
         head = head->next;
 		delete tmp->data;
 		delete tmp;
-	}
+    }
 }
 
 void LexemeList::addLexeme (const char* str, int num, lexemes type)
 {
     struct lex* l = new struct lex;
     l->data = str;
-    l->string_num = n;
-    l->type = t;
-    next = NULL;
+    l->string_num = num;
+    l->type = type;
+    l->next = NULL;
     if (tail)
     {
-		tail->next = p;
+		tail->next = l;
 		tail = tail->next;
 	}
     else
-		head = tail = current = p;
+		head = tail = current = l;
 }
 
 const char* LexemeList::getCurrent()
 {
-    return (current->data);    
+    return (current->data);
 }
 const char* LexemeList::getNext()
 {
@@ -287,14 +341,16 @@ const char* LexemeList::getFirst()
     current = head;
     return (current->data);
 }
+const char* enumStr[] = { "number", "const char", "variable", "mark",
+    "function", "key word", "separator", "assignment"};
 void LexemeList::printList()
 {
-    struct lex* tmp = head; 
+    struct lex* tmp = head;
 	while (tmp)
-    {
-		printf("%d: %s, %s\n", tmp->string_num, tmp->data,
-            enumStr[tmp->type]);
-		tmp = tmp->next;
+	{
+	    printf("%d: %s, %s\n", tmp->string_num, tmp->data,
+                enumStr[tmp->type]);
+	    tmp = tmp->next;
 	}
 }
 
