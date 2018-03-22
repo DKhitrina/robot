@@ -126,10 +126,10 @@ printf ("BUFFER: %s\n", buf);
 }
 char* StateMachine::makeLexeme()
 {
-printf ("\nMake lexeme\n");
+printf ("\nMake lexeme\nbuf: %s\n",s_buf);
     char* lex;
     int i;
-    if (s_buf)
+    if (s_buf && !check_separating_character(s_buf[0])) /*!!!*/
     {
         for (i = 0; buf[i] != 0; i++)
         {}
@@ -192,7 +192,7 @@ void StateMachine::stateNull(int symb)
     }
     else if (check_separating_character(symb))
     {
-        state = s_separate;
+        state =  lexeme_type =  s_separate;
         addSymbol(symb);
     }
     else if (!check_space(symb))
@@ -200,11 +200,10 @@ void StateMachine::stateNull(int symb)
 }
 void StateMachine::stateSeparate(int symb)
 {
-    if (check_space(symb))
-        state = s_null;
-    else
+    if (!check_space(symb))
         addSymbol(symb);
     lexeme_type = s_separate;
+    state = s_null;
 }
 void StateMachine::stateNumber(int symb)
 {
@@ -254,6 +253,7 @@ void StateMachine::stateKeyWord(int symb)
     else if (check_separating_character(symb))
     {
         state = s_separate;
+getSymbol(symb);
         lexeme_type = s_key_word;
     }
     else
