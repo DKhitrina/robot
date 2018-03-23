@@ -12,18 +12,18 @@ class StateMachine{
         s_assignment, s_string
     } state, lexeme_type;
 
+    void addCharacter (int symbol);
+    void addSymbol (int symbol);
+    char* makeLexeme();
+
 public:
     StateMachine();
     ~StateMachine();
-    int getState();
+    int ifError();
     lexemes getLexemeType(char* str);
     char* step(int symbol);
 
 private:
-    void getSymbol (int symbol);
-    void addSymbol (int symbol);
-    char* makeLexeme();
-
     void stateError();
     void stateNull(int symbol);
     void stateSeparate(int symbol);

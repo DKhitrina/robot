@@ -24,6 +24,50 @@ int check_space (int symb)
 
 //-----------------------------------------------------------------------------
 
+void StateMachine::addCharacter (int symb)  /* using special buf for ungets */
+{
+    s_buf[0] = symb;
+}
+void StateMachine::addSymbol (int symb)  /* without ungets */
+{
+    int i;
+    for (i = 0; buf[i] != 0; i++)
+    {}
+    buf[i] = symb;
+    buf[i+1] = 0;
+}
+char* StateMachine::makeLexeme()
+{
+    char* lex;
+    int i;
+    if (s_buf[0]!=0 && lexeme_type == s_separate)
+    {
+	lex = new char[2];
+	lex[0] = s_buf[0];
+	lex[1] = 0;
+	s_buf[0] = 0;
+	return lex;
+    }
+    else if (buf[0]!=0)
+    {
+        for (i = 0; buf[i] != 0; i++)
+        {}
+        lex = new char[i+1];
+        for (i = 0; buf[i] != 0; i++){
+            lex[i] = buf[i];
+        }
+        lex[i+1] = 0;
+        for (i = 0; buf[i] != 0; i++){
+            buf[i] = 0;
+        }
+        return lex;
+    }
+    else
+        return NULL;
+}
+
+
+
 StateMachine::StateMachine()
 {
     buf = new char[128];
@@ -31,9 +75,17 @@ StateMachine::StateMachine()
     state = s_null;
     lexeme_type = s_null;
 }
-StateMachine::~StateMachine()   { delete [] buf; delete buf; }
 
-int StateMachine::getState()    { return state; }
+StateMachine::~StateMachine()   { delete [] buf; delete s_buf; }
+
+int StateMachine::ifError()
+{
+    if (state == s_error)
+	return 1;
+    else
+	return 0;
+}
+
 lexemes StateMachine::getLexemeType(char* str)
 {
     switch (lexeme_type)
@@ -65,8 +117,11 @@ lexemes StateMachine::getLexemeType(char* str)
 
 char* StateMachine::step(int symb)
 {
-    printf ("state machine: %d\n", getState());
-    printf ("new symbol: %d\n", symb);
+    int flag_delayed_output = 0;
+    if (state == s_separate && s_buf[0] != 0)
+    {
+	flag_delayed_output = 1;
+    }
     switch (state)
     {
     case s_null:
@@ -95,90 +150,41 @@ char* StateMachine::step(int symb)
         break;
 
     }
-    if (state == s_null || state == s_separate)
+    if (state == s_null || state == s_separate
+	|| state == s_assignment)
         return makeLexeme();
+    else if (flag_delayed_output)
+    {
+	lexeme_type = s_separate;
+	return makeLexeme();
+    }
     else
         return NULL;
 }
 
 
 
-void StateMachine::getSymbol (int symb)  /* using special buf for ungets */
+void StateMachine::stateError()
 {
-    int i;
-    if (s_buf){
-        for (i = 0; buf[i] != 0; i++)
-        {}
-        buf[i] = s_buf[0];
-        buf[i+1] = 0;
-    }
-        s_buf[0] = symb;
-printf ("BUFFER: %s\n", buf);
-}
-void StateMachine::addSymbol (int symb)  /* without ungets */
-{
-    int i;
-    for (i = 0; buf[i] != 0; i++)
-    {}
-    buf[i] = symb;
-    buf[i+1] = 0;
-printf ("BUFFER: %s\n", buf);
-}
-char* StateMachine::makeLexeme()
-{
-printf ("\nMake lexeme\nbuf: %s\n",s_buf);
-    char* lex;
-    int i;
-    if (s_buf && !check_separating_character(s_buf[0])) /*!!!*/
-    {
-        for (i = 0; buf[i] != 0; i++)
-        {}
-        buf[i] = s_buf[0];
-        buf[i+1] = 0;
-	s_buf[0] = 0;
-    }
-printf ("LEXEME: %s\n\n", buf);
-    if (buf[0]!=0)
-    {
-        for (i = 0; buf[i] != 0; i++)
-        {}
-        lex = new char[i+1];
-        for (i = 0; buf[i] != 0; i++){
-            lex[i] = buf[i];
-        }
-        lex[i+1] = 0;
-        for (i = 0; buf[i] != 0; i++)
-        {
-            buf[i] = 0;
-        }
-        return lex;
-    }else
-        return NULL;
-}
-
-
-
-void StateMachine::stateError() /* throw? */
-{
-    printf ("Error: lexeme expected\n");
+    state = lexeme_type = s_error;
 }
 void StateMachine::stateNull(int symb)
 {
     if (symb >= '0' && symb <= '9')
     {
         state = s_number;
-        getSymbol(symb);
+        addSymbol(symb);
     }
     else if (symb == '?' || symb == '@' || symb == '$' )
     {
         state = s_indeficator;
-        getSymbol(symb);
+        addSymbol(symb);
     }
     else if ((symb >= 'A' && symb <= 'Z')
         || (symb >= 'a' && symb <= 'z'))
     {
         state = s_key_word;
-        getSymbol(symb);
+        addSymbol(symb);
     }
     else if (symb == ':')
     {
@@ -192,18 +198,25 @@ void StateMachine::stateNull(int symb)
     }
     else if (check_separating_character(symb))
     {
-        state =  lexeme_type =  s_separate;
-        addSymbol(symb);
+        state = lexeme_type =  s_separate;
+        addCharacter(symb);
     }
     else if (!check_space(symb))
         state = s_error;
 }
 void StateMachine::stateSeparate(int symb)
 {
-    if (!check_space(symb))
-        addSymbol(symb);
-    lexeme_type = s_separate;
-    state = s_null;
+    if (check_space(symb))
+    {
+        state = s_null;
+    }
+    else if (check_separating_character(symb))
+    {
+	addCharacter(symb);
+        lexeme_type = s_separate;
+    }
+    else
+	stateNull(symb);
 }
 void StateMachine::stateNumber(int symb)
 {
@@ -213,13 +226,23 @@ void StateMachine::stateNumber(int symb)
         state = s_null;
     }
     else if (check_separating_character(symb))
+    {
         state = s_separate;
+	lexeme_type = s_number;
+	addCharacter(symb);
+    }
+    else if (symb == ':')
+    {
+	lexeme_type = s_number;
+        state = s_assignment;
+        addCharacter(symb);
+    }
     else
     {
         if (symb < '0' || symb > '9')
             state = s_error;
         else
-            getSymbol(symb);
+            addSymbol(symb);
     }
 }
 void StateMachine::stateIdentificator(int symb)
@@ -233,6 +256,13 @@ void StateMachine::stateIdentificator(int symb)
     {
         lexeme_type = s_indeficator;
         state = s_separate;
+	addCharacter(symb);
+    }
+    else if (symb == ':')
+    {
+        lexeme_type = s_indeficator;
+        state = s_assignment;
+        addCharacter(symb);
     }
     else
     {
@@ -240,7 +270,7 @@ void StateMachine::stateIdentificator(int symb)
             || (symb > 'Z' && symb < 'a') || symb > 'z')
             state = s_error;
         else
-            getSymbol(symb);
+            addSymbol(symb);
     }
 }
 void StateMachine::stateKeyWord(int symb)
@@ -253,24 +283,38 @@ void StateMachine::stateKeyWord(int symb)
     else if (check_separating_character(symb))
     {
         state = s_separate;
-getSymbol(symb);
         lexeme_type = s_key_word;
+	addCharacter(symb);
+    }
+    else if (symb == ':')
+    {
+        lexeme_type = s_key_word;
+        state = s_assignment;
+        addCharacter(symb);
     }
     else
     {
         if (symb < 'A' || (symb > 'Z' && symb < 'a') || symb > 'z')
             state = s_error;
         else
-            getSymbol(symb);
+            addSymbol(symb);
     }
 }
 void StateMachine::stateAssignment(int symb)
 {
     if (symb == '=')
     {
+	addSymbol (s_buf[0]);
+	s_buf[0] = 0;
         addSymbol(symb);
         lexeme_type = s_assignment;
         state = s_null;
+    }
+    else if (check_separating_character(symb)
+	|| check_space (symb))
+    {
+	state = lexeme_type = s_separate;
+	stateSeparate(symb);
     }
     else
         state = s_error;
@@ -353,4 +397,3 @@ void LexemeList::printList()
 	    tmp = tmp->next;
 	}
 }
-
