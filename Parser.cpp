@@ -13,21 +13,9 @@
 const char* enumStr[] = { "number", "string", "variable", "mark", "function",
 	"key word", "separator", "assignment" };
 
-struct lex{
-	const char* data;
-	int string_num;
-	lexemes type;
-	struct lex* next;
-};
-
-void add_lexeme (struct lex** head, const char* str, int num, lexemes type)
+void add_struct_item (struct lex** head, struct lex* l)
 {
 	struct lex* tmp = (*head);
-	struct lex* l = new struct lex;
-	l->data = str;
-	l->string_num = num;
-	l->type = type;
-	l->next = NULL;
 	if (tmp)
 	{
 		while (tmp->next)
@@ -63,38 +51,31 @@ void delete_list(struct lex* head)
 
 int main(int argc, char** argv)
 {
-	char* buf = new char[BUFSIZE];
-	char* new_str;
-	int count, i;
-	lexemes  lex_type;
+	int c;
 	StateMachine s;
 	struct lex* head = NULL;
-	int err_str = 0, str_count = 1;
-	int fd = open(argv[1], O_RDONLY);
-	if (fd==-1){
-		printf ("Error: can not open file\n");
+	struct lex* new_struct_item;
+	FILE* f;
+	if (argc < 2)
+	{
+		fprintf (stderr, "Too few arguments\n");
 		exit (1);
 	}
-	while ((count = read(fd, buf, BUFSIZE))!=0){
-		for (i = 0; i < count; i++){
-			new_str = s.step(buf[i]);
-			if (new_str != NULL){
-				lex_type = s.getLexemeType(new_str);
-				add_lexeme(&head, new_str, str_count, lex_type);
-			}
-			if (buf[i] == '\n')
-				str_count ++;
-			if (s.ifError() && !err_str)
-				err_str = str_count;
-		}
-		buf[0] = 0;
+	f = fopen(argv[1], "r");
+	if (!f)
+	{
+		perror (argv[1]);
+		exit (1);
 	}
-
+	while ((c = fgetc(f))!=EOF)
+	{
+		new_struct_item = s.step(c);
+		if (new_struct_item != NULL)
+			add_struct_item(&head, new_struct_item);
+	}
 	print_list(head);
-
-	if (s.ifError())
-		printf ("%d: lexeme error\n", err_str);
-	delete [] buf;
+	if (s.ErrorStringNumber()!=0)
+		fprintf (stderr, "%d: lexeme error\n", s.ErrorStringNumber());
 	delete_list (head);
 	return 0;
 }

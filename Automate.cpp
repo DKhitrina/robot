@@ -50,6 +50,8 @@ struct lex* StateMachine::makeLexeme()
 {
 	char* lex;
 	int i;
+	if (buf[0] == ':' && buf[1] == 0)
+		return NULL;
 	if (s_buf[0]!=0 && lexeme_type == s_separate)
 	{
 		lex = new char[2];
@@ -172,13 +174,14 @@ struct lex* StateMachine::step(int symb)
 
 	if (symb == '\n')
 		new_string_flag = 1;
-	if (state == s_null || state == s_separate || state == s_assignment)
-		return makeLexeme();
-	else if (flag_delayed_output)
+	if (flag_delayed_output)
 	{
 		lexeme_type = s_separate;
 		return makeLexeme();
 	}
+	else
+	if (state == s_null || state == s_separate || state == s_assignment)
+		return makeLexeme();
 	else
 		return NULL;
 }
@@ -346,7 +349,7 @@ void StateMachine::stateString(int symb)
 		lexeme_type = s_string;
 		state = s_null;
 	}
-	else if (symb == '\n' || symb == EOF)
+	else if (symb == '\n')
 		state = s_error;
 	else
 		addSymbol(symb);
