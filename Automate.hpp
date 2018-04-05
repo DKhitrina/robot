@@ -1,27 +1,36 @@
-#ifndef MOD_PARSER_HPP
-#define MOD_PARSER_HPP
+#ifndef MOD_AUTOMATE_HPP
+#define MOD_AUTOMATE_HPP
 
 enum lexemes { number, string, variable, mark, function, key_word,
 	separator, assignment, error };
+enum err { IsError, NotError };
+struct lex{
+	const char* data;
+	int string_num;
+	lexemes type;
+	struct lex* next;
+};
 
 class StateMachine{
 	char* buf;
 	char* s_buf;
-	enum states {
-	s_null, s_error, s_separate, s_number, s_indeficator, s_key_word,
-		s_assignment, s_string
+	int string_count;
+	int error_string;
+	int new_string_flag;
+	enum states {s_null, s_error, s_separate, s_number, s_indeficator,
+		s_key_word,s_assignment, s_string
 	} state, lexeme_type;
 
 	void addCharacter (int symbol);
 	void addSymbol (int symbol);
-	char* makeLexeme();
+	struct lex* makeLexeme();
 
 public:
 	StateMachine();
 	~StateMachine();
-	int ifError();
+	int ErrorStringNumber();
 	lexemes getLexemeType(char* str);
-	char* step(int symbol);
+	struct lex* step(int symbol);
 
 private:
 	void stateError();
