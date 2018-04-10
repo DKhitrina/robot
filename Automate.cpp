@@ -36,7 +36,10 @@ struct lex* make_struct (const char* str, int num, lexemes type)
 
 void StateMachine::addCharacter (int symb)
 {
-	s_buf[0] = symb;
+	if (s_buf[0] != 0 && buf[0] == 0)
+		buf[0] = symb;
+	else
+		s_buf[0] = symb;
 }
 void StateMachine::addSymbol (int symb)
 {
@@ -57,7 +60,13 @@ struct lex* StateMachine::makeLexeme()
 		lex = new char[2];
 		lex[0] = s_buf[0];
 		lex[1] = 0;
-		s_buf[0] = 0;
+		if (buf[0] != 0 && check_separating_character(buf[0]))
+		{
+			s_buf[0] = buf[0];
+			buf[0] = 0;
+		}
+		else
+			s_buf[0] = 0;
 		return make_struct(lex, string_count, getLexemeType(lex));
 	}
 	else if (buf[0]!=0)
