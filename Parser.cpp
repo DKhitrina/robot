@@ -1,6 +1,7 @@
 // main part of parser included lexical and grammmar parts
 
 #include "Automate.hpp"
+#include "Semantic.hpp"
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -73,9 +74,23 @@ int main(int argc, char** argv)
 		if (new_struct_item != NULL)
 			add_struct_item(&head, new_struct_item);
 	}
-	print_list(head);
+//	print_list(head);
 	if (s.ErrorStringNumber()!=0)
 		fprintf (stderr, "%d: lexeme error\n", s.ErrorStringNumber());
+	else
+	{
+		try{
+			Semantic s;
+			if (s.check(head) == correct)
+				printf ("Correct semantics\n");
+		}
+		catch (SyntErr &er){
+			fprintf (stderr, "%d: %s, '%s' found\n", er.getStringNum(),
+				er.getComment(), er.getLexeme());
+			return 1;
+		}
+	}
+
 	delete_list (head);
 	return 0;
 }

@@ -1,10 +1,20 @@
 #include "Semantic.hpp"
-#include "Utils.hpp"
-/*
-	как запускать рекурсивный спуск, то есть что писать в check
-	правильно ли написан next
-	что делать когда дошли до конца рекурсии
-*/
+#include <string.h>
+#include <stdio.h>
+
+int cmp_str (const char* ar1, const char* ar2)
+{
+	int i = 0;
+	while (ar1[i]!=0)
+	{
+		if (ar1[i]!=ar2[i])
+			return 0;
+		i++;
+	}
+	if (ar2[i]!=0)
+		return 0;
+	return 1;
+}
 
 int Semantic::lexemeEqual (struct lex* l, lexemes l_type)
 {
@@ -30,38 +40,44 @@ int Semantic::lexemeEqual (struct lex* l, const char* str)
 
 void Semantic::next ()
 {
-	/* I didnt decided yet... */
+	previous = current;
 	current =  current->next;
+}
+
+void Semantic::epselentRule()
+{
+	current = previous;
 }
 
 //-----------------------------------------------------------------------------
 
 Semantic::Semantic()
 {
+	previous = new struct lex;
 	current = new struct lex;
 }
 Semantic::~Semantic()
 {
+	delete previous;
 	delete current;
 }
 evaluate Semantic::check (struct lex* l)
 {
-	/* ???? */
+	current = l;
+	previous = NULL;
+	S();
+	return correct;
 }
 
 //-----------------------------------------------------------------------------
 
 void Semantic::S()
 {
-	if (!lexemeEqual(current, mark))
-		throw SyntErr("expected mark at the beginning of the cycle",
+	if (!lexemeEqual(current, "@begin"))
+		throw SyntErr("expected '@begin' at the beginning of the cycle",
 			 current->data, current->string_num);
 	next();
 	L();
-	next();
-	if (!lexemeEqual(current, ';'))
-		throw SyntErr("expected ';' at the end of the expression",
-			current->data, current->string_num);
 	next();
 	if (!lexemeEqual(current, "endturn"))
 		throw SyntErr("expected 'endturn' before the end of the loop",
@@ -75,25 +91,31 @@ void Semantic::S()
 		throw SyntErr("expected 'goto' at the end of the loop",
 			current->data, current->string_num);
 	next();
-	if (!lexemeEqual(current, mark))
-		throw SyntErr("expected mark at the end of the loop",
+	if (!lexemeEqual(current, "@end"))
+		throw SyntErr("expected '@end' at the end of the loop",
 			current->data, current->string_num);
 	next();
 	if (current != NULL)
-		throw SyntError("unexpected command after the main loop",
+		throw SyntErr("unexpected command after the main loop",
 			current->data, current->string_num);
 }
 void Semantic::L()
 {
-	if (lexemeEqual(current, key_word) || lexemeEqual(current, variable)
-		|| lexemeEqual(current, ';'))
+	if (lexemeEqual(current, "if") || lexemeEqual(current, "buy")
+		|| lexemeEqual(current, "sell") || lexemeEqual(current, "print")
+		|| lexemeEqual(current, "prod") || lexemeEqual(current, "build")
+		|| lexemeEqual(current, variable))
 	{
-		next();
 		K();
+		next();
+		if (!lexemeEqual(current, ';'))
+			throw SyntErr("expected ';' at the end of the expression",
+				current->data, current->string_num);
+		next();
+		L();
 	}
 	else
-		throw SyntError("unexpected lexeme instead of expression",
-			current->data, current->string_num);	
+		epselentRule();
 }
 void Semantic::K()
 {
@@ -108,8 +130,8 @@ void Semantic::K()
 		next();
 		Q();
 		next();
-		if (!lexemeEqual(current, ';'))
-			throw SyntErr("expected ';' at the end of the expression",
+		if (!lexemeEqual(current, ','))
+			throw SyntErr("expected ',' between arguments",
 				current->data, current->string_num);
 		next();
 		Q();
@@ -122,13 +144,13 @@ void Semantic::K()
 			throw SyntErr("assignment expected", current->data,
 				current->string_num);
 		next();
-		Q();	
+		Q();
 	}
 	else
 	if (lexemeEqual(current, "print"))
 	{
 		next();
-		if (!lexemeEqual(current, cchar))
+		if (!lexemeEqual(current, string))
 			throw SyntErr("string expected", current->data,
 				current->string_num);
 	}
@@ -138,6 +160,8 @@ void Semantic::K()
 		next();
 		Q();
 	}
+	else
+		epselentRule();
 }
 void Semantic::H()
 {
@@ -145,15 +169,15 @@ void Semantic::H()
 		throw SyntErr("expected '(' at the beginning of condition",
 			current->data, current->string_num);
 	next();
-	C();
+	J();
 	next();
 	if (!lexemeEqual(current, ')'))
 		throw SyntErr("expected ')' at the end of condition",
-			current->data, current->string_num);	
+			current->data, current->string_num);
 	next();
-	if (!lexemeEqual(current, "then")
+	if (!lexemeEqual(current, "then"))
 		throw SyntErr("'then' expected after condition", current->data,
-			current->string_num);	
+			current->string_num);
 	next();
 	K();
 	next();
@@ -161,11 +185,33 @@ void Semantic::H()
 }
 void Semantic::O()
 {
-	if (lexemeEqual(current, "else")
+	if (lexemeEqual(current, "else"))
 	{
 		next();
 		K();
 	}
+	else
+	if (lexemeEqual(current, ';') && lexemeEqual(current->next, "else"))
+		throw SyntErr("unexpected ';' before 'else' ", current->data,
+			current->string_num);
+	else
+		epselentRule();
+}
+void Semantic::J()
+{
+	C();
+	next();
+	R();
+}
+void Semantic::R()
+{
+	if (lexemeEqual(current,'|'))
+	{
+		next();
+		J();
+	}
+	else
+		epselentRule();
 }
 void Semantic::C()
 {
@@ -175,11 +221,13 @@ void Semantic::C()
 }
 void Semantic::A()
 {
-	if (lexemeEqual(current, '&') || lexemeEqual(current,'|'))
+	if (lexemeEqual(current, '&'))
 	{
 		next();
-		Z();
-	}	
+		C();
+	}
+	else
+		epselentRule();
 }
 void Semantic::Z()
 {
@@ -189,11 +237,14 @@ void Semantic::Z()
 }
 void Semantic::B()
 {
-	if (lexemeEqual(current, '>') || lexemeEqual(current,'<') || lexemeEqual(current,'='))
+	if (lexemeEqual(current, '>') || lexemeEqual(current,'<')
+		|| lexemeEqual(current,'='))
 	{
 		next();
 		Q();
-	}	
+	}
+	else
+		epselentRule();
 }
 void Semantic::Q()
 {
@@ -206,8 +257,10 @@ void Semantic::D()
 	if (lexemeEqual(current, '+') || lexemeEqual(current,'-'))
 	{
 		next();
-		X();
+		Q();
 	}
+	else
+		epselentRule();
 }
 void Semantic::X()
 {
@@ -217,28 +270,30 @@ void Semantic::X()
 }
 void Semantic::G()
 {
-	if (lexemeEqual(current, '*') || lexemeEqual(current,'%') || lexemeEqual(current,'/'))
+	if (lexemeEqual(current, '*') || lexemeEqual(current,'%')
+		|| lexemeEqual(current,'/'))
 	{
 		next();
-		Y();
-	}	
+		X();
+	}
+	else
+		epselentRule();
 }
 void Semantic::Y()
 {
 	if(lexemeEqual(current, variable))
 	{
-		/*дошли до конца рекурсивного спуска*/
+		/* end of recursive descent */
 	}
 	else
 	if(lexemeEqual(current, function))
 	{
-		next();
 		F();
 	}
 	else
 	if(lexemeEqual(current, number))
 	{
-		/*дошли до конца рекурсивного спуска*/
+		/* end of recursive descent */
 	}
 	else
 	if(lexemeEqual(current, '('))
@@ -247,52 +302,58 @@ void Semantic::Y()
 		Q();
 		next();
 		if (!lexemeEqual(current, ')'))
-			throw SyntErr("')' expected", current->data, current->string_num);
+			throw SyntErr("')' expected", current->data,
+				current->string_num);
 	}
 	else
-		throw SyntErr ("unexpected lexeme", current->data, current->string_num);
+		throw SyntErr ("unexpected lexeme", current->data,
+			current->string_num);
 }
 void Semantic::M()
 {
 	if (lexemeEqual(current, "buy"))
 	{
-		/*дошли до конца рекурсивного спуска*/
+		/* end of recursive descent */
 	}
 	else
 	if (lexemeEqual(current, "sell"))
 	{
-		/*дошли до конца рекурсивного спуска*/
+		/* end of recursive descent */
 	}
 	else
-		throw SyntErr ("unexpected lexeme after 'buy'/'sell'", current->data, current->string_num);
+		throw SyntErr ("unexpected lexeme after 'buy'/'sell'",
+			current->data, current->string_num);
 }
 void Semantic::I()
 {
 	if (lexemeEqual(current, "print"))
 	{
-		/*дошли до конца рекурсивного спуска*/
+		/* end of recursive descent */
 	}
 	else
-		throw SyntErr ("unexpected lexeme after 'print'", current->data, current->string_num);	
+		throw SyntErr ("unexpected lexeme after 'print'",
+			current->data, current->string_num);
 }
 void Semantic::P()
 {
 	if (lexemeEqual(current, "prod"))
 	{
-		/*дошли до конца рекурсивного спуска*/
+		/* end of recursive descent */
 	}
 	else
 	if (lexemeEqual(current, "build"))
 	{
-		/*дошли до конца рекурсивного спуска*/
+		/* end of recursive descent */
 	}
 	else
-		throw SyntErr ("unexpected lexeme after 'prod'/'build'", current->data, current->string_num);
+		throw SyntErr ("unexpected lexeme after 'prod'/'build'",
+			current->data, current->string_num);
 }
 void Semantic::F()
 {
 	if (!lexemeEqual(current, function))
-		throw SyntErr("expected function", current->data, current->string_num);
+		throw SyntErr("expected function", current->data,
+			current->string_num);
 	next();
 	E();
 }
@@ -302,7 +363,38 @@ void Semantic::E()
 	{
 		next();
 		F();
+		next();
 		if (!lexemeEqual(current, ')'))
-			throw SyntErr("expected ')' after the argument", current->data, current->string_num);
+			throw SyntErr("expected ')' after the argument",
+				current->data, current->string_num);
 	}
+	else
+		epselentRule();
+}
+
+
+//-----------------------------------------------------------------------------
+
+SyntErr::SyntErr(const char* com, const char* lex, int num)
+{
+	comment = strDuplicate(com);
+	lexeme = strDuplicate(lex);
+	string_num = num;
+}
+
+SyntErr::~SyntErr()
+{
+	delete [] comment;
+	delete [] lexeme;
+}
+
+char* SyntErr::getComment() { return comment; }
+char* SyntErr::getLexeme() { return lexeme; }
+int SyntErr::getStringNum() { return string_num; }
+
+char* SyntErr::strDuplicate(const char* str)
+{
+	char* cp = new char [strlen(str)+1];
+	strcpy (cp, str);
+	return cp;
 }

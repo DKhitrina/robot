@@ -1,12 +1,17 @@
-enum evaluate { yes, no };
-enum lexemes { number, cchar, variable, mark, function, key_word,
-    separator, assignment, error};
+#ifndef MOD_SEMANTIC_HPP
+#define MOD_SEMANTIC_HPP
+
+#include "Automate.hpp"
+
+enum evaluate { correct, incorrect };
 
 class Semantic{
 	int lexemeEqual (struct lex* l, lexemes l_type);
 	int lexemeEqual (struct lex* l, int character);
 	int lexemeEqual (struct lex* l, const char* str);
-	struct lex* next();
+	void next();
+	void epselentRule();
+	struct lex* previous;
 	struct lex* current;
 public:
 	Semantic();
@@ -18,6 +23,8 @@ private:
 	void K();
 	void H();
 	void O();
+	void J();
+	void R();
 	void C();
 	void A();
 	void Z();
@@ -32,4 +39,20 @@ private:
 	void P();
 	void F();
 	void E();
-}
+};
+
+class SyntErr{
+	char* comment;
+	char* lexeme;
+	int string_num;
+public:
+	SyntErr(const char* com, const char* lex, int num);
+	~SyntErr();
+	char* getComment();
+	char* getLexeme();
+	int getStringNum();
+private:
+	static char* strDuplicate(const char* str);
+};
+
+#endif
