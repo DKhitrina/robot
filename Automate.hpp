@@ -3,7 +3,6 @@
 
 enum lexemes { number, string, variable, mark, function, key_word,
 	separator, assignment, error };
-enum err { IsError, NotError };
 struct lex{
 	const char* data;
 	int string_num;
@@ -28,7 +27,7 @@ class StateMachine{
 public:
 	StateMachine();
 	~StateMachine();
-	int ErrorStringNumber();
+	int errorStringNumber();
 	lexemes getLexemeType(char* str);
 	struct lex* step(int symbol);
 
