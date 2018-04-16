@@ -3,20 +3,17 @@
 
 #include "Automate.hpp"
 
-enum evaluate { correct, incorrect };
-
 class Semantic{
+	struct lex* current;
 	int lexemeEqual (struct lex* l, lexemes l_type);
 	int lexemeEqual (struct lex* l, int character);
 	int lexemeEqual (struct lex* l, const char* str);
+	int firstK (const char* str);
 	void next();
-	void epselentRule();
-	struct lex* previous;
-	struct lex* current;
 public:
 	Semantic();
 	~Semantic();
-	evaluate check (struct lex* l);
+ 	void check (struct lex* l);
 private:
 	void S();
 	void L();
@@ -34,6 +31,7 @@ private:
 	void X();
 	void G();
 	void Y();
+	void N();
 	void M();
 	void I();
 	void P();

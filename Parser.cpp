@@ -75,18 +75,19 @@ int main(int argc, char** argv)
 			add_struct_item(&head, new_struct_item);
 	}
 //	print_list(head);
-	if (s.ErrorStringNumber()!=0)
-		fprintf (stderr, "%d: lexeme error\n", s.ErrorStringNumber());
+	if (s.errorStringNumber()!=0)
+		fprintf (stderr, "%d: lexeme error\n", s.errorStringNumber());
 	else
 	{
 		try{
 			Semantic s;
-			if (s.check(head) == correct)
-				printf ("Correct semantics\n");
+			s.check(head);
+			printf ("Correct semantics\n");
 		}
 		catch (SyntErr &er){
-			fprintf (stderr, "%d: %s, '%s' found\n", er.getStringNum(),
-				er.getComment(), er.getLexeme());
+			fprintf (stderr, "%d: %s, '%s' found\n",
+				er.getStringNum(), er.getComment(),
+				er.getLexeme());
 			return 1;
 		}
 	}
