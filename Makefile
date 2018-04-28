@@ -1,6 +1,6 @@
 Automate.o: Automate.cpp Automate.hpp
 	g++ -g -Wall -c Automate.cpp -o Automate.o
-Semantic.o: Semantic.cpp Semantic.hpp
-	g++ -g -Wall -c Semantic.cpp -o Semantic.o
-prog: Parser.cpp Automate.o Semantic.o
-	g++ -g -Wall Parser.cpp Automate.o Semantic.o -o prog
+Syntax.o: Syntax.cpp Syntax.hpp
+	g++ -g -Wall -c Syntax.cpp -o Syntax.o
+prog: Parser.cpp Automate.o Syntax.o
+	g++ -g -Wall Parser.cpp Automate.o Syntax.o -o prog

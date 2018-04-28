@@ -1,7 +1,7 @@
 // main part of parser included lexical and grammmar parts
 
 #include "Automate.hpp"
-#include "Semantic.hpp"
+#include "Syntax.hpp"
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -80,11 +80,11 @@ int main(int argc, char** argv)
 	else
 	{
 		try{
-			Semantic s;
+			Syntax s;
 			s.check(head);
-			printf ("Correct semantics\n");
+			printf ("Correct syntax\n");
 		}
-		catch (SyntErr &er){
+		catch (const SyntErr &er){
 			fprintf (stderr, "%d: %s, '%s' found\n",
 				er.getStringNum(), er.getComment(),
 				er.getLexeme());

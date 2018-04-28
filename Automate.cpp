@@ -2,26 +2,24 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-enum check { no, yes };
-
-check check_separating_character (int symb) /* 1 - match, 0 - don't match */
+bool check_separating_character (int symb)
 {
 	if ( symb == '+' || symb == '-' || symb == '*' || symb == '/'
 		|| symb == '%' || symb == '<' || symb == '>' || symb == '='
 		|| symb == '&' || symb == '|' || symb == '!' || symb == '('
 		|| symb == ')' || symb == '[' || symb == ']' || symb == ';'
 		|| symb == ',')
-		return yes;
+		return true;
 	else
-		return no;
+		return false;
 }
 
-check check_space (int symb)
+bool check_space (int symb)
 {
 	if (symb == '\n' || symb == ' ' || symb == '\t')
-		return yes;
+		return true;
 	else
-		return no;
+		return false;
 }
 
 struct lex* make_struct (const char* str, int num, lexemes type)
@@ -62,7 +60,7 @@ struct lex* StateMachine::makeLexeme()
 		lex = new char[2];
 		lex[0] = s_buf[0];
 		lex[1] = 0;
-		if (buf[0] != 0 && check_separating_character(buf[0]) == yes)
+		if (buf[0] != 0 && check_separating_character(buf[0]))
 		{
 			s_buf[0] = buf[0];
 			buf[0] = 0;
@@ -229,19 +227,19 @@ void StateMachine::stateNull(int symb)
 		state = s_string;
 		addSymbol(symb);
 	}
-	else if (check_separating_character(symb) == yes)
+	else if (check_separating_character(symb))
 	{
 		state = lexeme_type =  s_separate;
 		addCharacter(symb);
 	}
-	else if (check_space(symb) == no)
+	else if (!check_space(symb))
 		state = s_error;
 }
 void StateMachine::stateSeparate(int symb)
 {
-	if (check_space(symb) == yes)
+	if (check_space(symb))
 		state = s_null;
-	else if (check_separating_character(symb) == yes)
+	else if (check_separating_character(symb))
 	{
 		addCharacter(symb);
 		lexeme_type = s_separate;
@@ -251,12 +249,12 @@ void StateMachine::stateSeparate(int symb)
 }
 void StateMachine::stateNumber(int symb)
 {
-	if (check_space(symb) == yes)
+	if (check_space(symb))
 	{
 		lexeme_type = s_number;
 		state = s_null;
 	}
-	else if (check_separating_character(symb) == yes)
+	else if (check_separating_character(symb))
 	{
 		state = s_separate;
 		lexeme_type = s_number;
@@ -278,12 +276,12 @@ void StateMachine::stateNumber(int symb)
 }
 void StateMachine::stateIdentificator(int symb)
 {
-	if (check_space(symb) == yes)
+	if (check_space(symb))
 	{
 		state = s_null;
 		lexeme_type = s_indeficator;
 	}
-	else if (check_separating_character(symb) == yes)
+	else if (check_separating_character(symb))
 	{
 		state = s_separate;
 		lexeme_type = s_indeficator;
@@ -306,12 +304,12 @@ void StateMachine::stateIdentificator(int symb)
 }
 void StateMachine::stateKeyWord(int symb)
 {
-	if (check_space(symb) == yes)
+	if (check_space(symb))
 	{
 		state = s_null;
 		lexeme_type = s_key_word;
 	}
-	else if (check_separating_character(symb) == yes)
+	else if (check_separating_character(symb))
 	{
 		state = s_separate;
 		lexeme_type = s_key_word;
@@ -341,8 +339,7 @@ void StateMachine::stateAssignment(int symb)
 		lexeme_type = s_assignment;
 		state = s_null;
 	}
-	else if (check_separating_character(symb) == yes
-		|| check_space (symb) == yes)
+	else if (check_separating_character(symb) || check_space (symb))
 	{
 		state = lexeme_type = s_separate;
 		stateSeparate(symb);

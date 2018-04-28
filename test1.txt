@@ -1,10 +1,12 @@
 @begin
-	if (2*3+7%2-45 > $a [ 33/8+(3-5*354) ])
+	if ( !(2*6+7%2-45 > $a[33/8+(3-5*354)]) )
 	then
-		print "mounth no. ";
+		print "mounth no. "
+	else
+		print "no";
 	buy 2, ?rawprice;
 	sell ?production(?myid), ?productionprice;
 	$value := 2;
 	prod $value;
 	endturn;
-goto @end
+goto @begin
